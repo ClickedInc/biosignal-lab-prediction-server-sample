@@ -37,13 +37,21 @@ class MotionData:
                     )
 
 class PredictedData:
-    def __init__(self, timestamp, orientation):
-        self.data = struct.pack('>d4f', timestamp,
-                                orientation[0], orientation[1], orientation[2], orientation[3])
+    def __init__(self, timestamp, orientation, predictionTime):
+        self.timestamp = timestamp
+        self.orientation = orientation
+        self.predictionTime = predictionTime
+
+class PredictionServerData:
+    def __init__(self, predictedData , originalOrientation):
+        self.data = struct.pack('>d9f', predictedData.timestamp,
+                                predictedData.orientation[0],predictedData.orientation[1],predictedData.orientation[2],predictedData.orientation[3], predictedData.predictionTime,
+                                originalOrientation[0] , originalOrientation[1] , originalOrientation[2], originalOrientation[3])
 
 def trivial_prediction(motion_data):
     # no prediction
-    return PredictedData(motion_data.timestamp, motion_data.orientation)
+    predictionTime = 100.0 #sample
+    return PredictedData(motion_data.timestamp, motion_data.orientation, predictionTime)
 
 async def server_loop(context, port, predict):
     motion_raw_input = context.socket(zmq.PULL)
@@ -66,8 +74,10 @@ async def server_loop(context, port, predict):
             motion_data = MotionData(frame.bytes)
 
             predicted_data = predict(motion_data)
+
+            packet = PredictionServerData(predicted_data, motion_data.orientation)
             
-            motion_predicted_output.send(predicted_data.data)
+            motion_predicted_output.send(packet.data)
         if stats_input in dict(events):
             stats = await stats_input.recv_json()
             print(stats)
