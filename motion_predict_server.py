@@ -70,6 +70,10 @@ class PredictModule(metaclass=ABCMeta):
     def predict(self, motion_data):
         pass
 
+    @abstractmethod
+    def feedbackReceived(self, feedback):
+        pass
+
 class MotionPredictSimulator:
     def __init__(self, module, input_motion_data, prediction_output):
         self.module = module
@@ -207,6 +211,8 @@ class MotionPredictServer:
         if entry['srcmask'] == 0b11:
             if self.metric_writer is not None:
                 self.metric_writer.write_metric(self.feedbacks[session])
+
+            self.module.feedbackReceived(self.feedbacks[session])
                 
             self.feedbacks = { s:self.feedbacks[s] for s in self.feedbacks if s > session }
 

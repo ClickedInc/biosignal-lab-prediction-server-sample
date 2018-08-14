@@ -61,6 +61,11 @@ class App(PredictModule):
 
         return predicted_orientation, prediction_time
 
+    def feedbackReceived(self, feedback):
+        # see PrefMetricWriter.write_metric() to understand feedback values (motion_prediction_server.py:320)
+        # example : calculate overall latency
+        overall_latency = feedback['endClientRender'] - feedback['gatherInput']
+
 def main():
     app = App()
     app.run()
