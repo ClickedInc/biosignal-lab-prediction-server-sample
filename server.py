@@ -1,7 +1,8 @@
-import signal
 import sys
 import getopt
-from motion_predict_server import PredictModule, MotionPredictServer, MotionPredictSimulator
+from predict_server import PredictModule, MotionPredictServer
+from predict_server.simulator import MotionPredictSimulator
+
 
 class App(PredictModule):
     def parse_command_args(self):
@@ -30,11 +31,14 @@ class App(PredictModule):
         return port, feedback, input_file, output, metric_output
 
     def run(self):
-        port_input, port_feedback, input_file, output, metric_output = self.parse_command_args()
-        if input_file == None:
-            assert(port_input != None and port_feedback != None)
+        port_input, port_feedback, input_file, output, metric_output = \
+            self.parse_command_args()
+        if input_file is None:
+            assert(port_input is not None and port_feedback is not None)
             
-            server = MotionPredictServer(self, port_input, port_feedback, output, metric_output)
+            server = MotionPredictServer(
+                self, port_input, port_feedback, output, metric_output
+            )
 
             try:
                 server.run()
@@ -44,7 +48,7 @@ class App(PredictModule):
                 server.shutdown()
                 
         else:
-            assert(output != None)
+            assert(output is not None)
 
             simulator = MotionPredictSimulator(self, input_file, output)
 
@@ -56,19 +60,29 @@ class App(PredictModule):
     # implements PredictModule
     def predict(self, motion_data):
         # no prediction
+        prediction_time = 100.0  # ms
         predicted_orientation = motion_data.orientation
-        prediction_time = 100.0  #sample
 
-        return predicted_orientation, prediction_time
+        # overfilling left, top, right, bottom in radian
+        overfilling = [-0.0873, 0.0873, 0.0873, -0.0873]
+
+        return prediction_time, predicted_orientation, overfilling
 
     def feedbackReceived(self, feedback):
-        # see PrefMetricWriter.write_metric() to understand feedback values (motion_prediction_server.py:320)
+        # see PrefMetricWriter.write_metric() to understand feedback values
+        # (motion_prediction_server.py:320)
+        
         # example : calculate overall latency
-        overall_latency = feedback['endClientRender'] - feedback['gatherInput']
+        #
+        # overall_latency = feedback['endClientRender'] - feedback['gatherInput']
+        
+        pass
 
+    
 def main():
     app = App()
     app.run()
 
+    
 if __name__ == "__main__":
     main()
