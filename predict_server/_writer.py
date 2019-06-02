@@ -1,3 +1,6 @@
+import numpy as np
+import quaternion
+
 from abc import abstractmethod, ABCMeta
 
 
@@ -45,16 +48,19 @@ class PredictionOutputWriter(CsvWriter):
             'input_orientation_y',
             'input_orientation_z',
             'input_orientation_w',
+            'input_projection_left',
+            'input_projection_top',
+            'input_projection_right',
+            'input_projection_bottom',
             'prediction_time',
             'predicted_orientation_x',
             'predicted_orientation_y',
             'predicted_orientation_z',
             'predicted_orientation_w',
-            'fov',
-            'overfilling_left',
-            'overfilling_top',
-            'overfilling_right',
-            'overfilling_bottom'
+            'predicted_projection_left',
+            'predicted_projection_top',
+            'predicted_projection_right',
+            'predicted_projection_bottom'
         ]
 
     def write(self, motion_data, predicted_data):
@@ -81,16 +87,19 @@ class PredictionOutputWriter(CsvWriter):
             str(motion_data.orientation[1]),
             str(motion_data.orientation[2]),
             str(motion_data.orientation[3]),
+            str(motion_data.camera_projection[0]),
+            str(motion_data.camera_projection[1]),
+            str(motion_data.camera_projection[2]),
+            str(motion_data.camera_projection[3]),
             str(predicted_data.prediction_time),
             str(predicted_data.orientation[0]),
             str(predicted_data.orientation[1]),
             str(predicted_data.orientation[2]),
             str(predicted_data.orientation[3]),
-            str(motion_data.fov),
-            str(predicted_data.overfilling[0]),
-            str(predicted_data.overfilling[1]),
-            str(predicted_data.overfilling[2]),
-            str(predicted_data.overfilling[3])
+            str(predicted_data.camera_projection[0]),
+            str(predicted_data.camera_projection[1]),
+            str(predicted_data.camera_projection[2]),
+            str(predicted_data.camera_projection[3])
         ])
 
         
@@ -111,10 +120,13 @@ class PerfMetricWriter(CsvWriter):
             'start_decode_start_client_render',
             'start_client_render_end_client_render',
             'frame_type',
-            'frame_size'
+            'frame_size',
+            'optimal_overhead',
+            'actual_overhead'
         ]
 
     def write_metric(self, feedback):
+        # latency
         overall_latency = feedback['endClientRender'] - feedback['gatherInput']
         
         start_prediction_send_predicted = \
@@ -144,6 +156,32 @@ class PerfMetricWriter(CsvWriter):
 
         gather_input_start_prediction = send_video_start_recv_video = rtt / 2
 
+        # overhead
+        hmd_orientation = np.quaternion(
+            feedback['hmdOrientationW'],
+            feedback['hmdOrientationX'],
+            feedback['hmdOrientationY'],
+            feedback['hmdOrientationZ'],
+        )
+        hmd_projection = [
+            feedback['hmdProjectionL'],
+            feedback['hmdProjectionT'],
+            feedback['hmdProjectionR'],
+            feedback['hmdProjectionB']
+        ]
+        frame_orientation = np.quaternion(
+            feedback['frameOrientationW'],
+            feedback['frameOrientationX'],
+            feedback['frameOrientationY'],
+            feedback['frameOrientationZ']
+        )
+        frame_projection = [
+            feedback['frameProjectionL'],
+            feedback['frameProjectionT'],
+            feedback['frameProjectionR'],
+            feedback['frameProjectionB']
+        ]
+
         self.write_line([
             str(feedback['session'] / 705600000.0),
             str(gather_input_start_prediction),
@@ -156,5 +194,43 @@ class PerfMetricWriter(CsvWriter):
             str(start_decode_start_client_render),
             str(start_client_render_end_client_render),
             str("{:.0f}".format(feedback['frameType'])),
-            str("{:.0f}".format(feedback['frameSize']))
+            str("{:.0f}".format(feedback['frameSize'])),
+            str(self.calc_optimal_overhead(hmd_orientation, frame_orientation, hmd_projection)),
+            str(self.calc_actual_overhead(hmd_projection, frame_projection))
         ])
+
+    def calc_optimal_overhead(self, hmd_orientation, frame_orientation, hmd_projection):
+        q_d = np.matmul(
+            np.linalg.inv(quaternion.as_rotation_matrix(hmd_orientation)),
+            quaternion.as_rotation_matrix(frame_orientation)
+        )
+
+        lt = np.matmul(q_d, [hmd_projection[0], hmd_projection[1], 1])
+        p_lt = np.dot(lt, 1 / lt[2])
+        
+        rt = np.matmul(q_d, [hmd_projection[2], hmd_projection[1], 1])
+        p_rt = np.dot(rt, 1 / rt[2])
+
+        rb = np.matmul(q_d, [hmd_projection[2], hmd_projection[3], 1])
+        p_rb = np.dot(rb, 1 / rb[2])
+
+        lb = np.matmul(q_d, [hmd_projection[0], hmd_projection[3], 1])
+        p_lb = np.dot(lb, 1 / lb[2])
+
+        p_l = min(p_lt[0], p_rt[0], p_rb[0], p_lb[0])
+        p_t = max(p_lt[1], p_rt[1], p_rb[1], p_lb[1])
+        p_r = max(p_lt[0], p_rt[0], p_rb[0], p_lb[0])
+        p_b = min(p_lt[1], p_rt[1], p_rb[1], p_lb[1])
+
+        size = max(p_r - p_l, p_t - p_b)
+        a_overfilling = size * size
+
+        a_hmd = (hmd_projection[2] - hmd_projection[0]) * (hmd_projection[1] - hmd_projection[3])
+
+        return a_overfilling / a_hmd - 1
+
+    def calc_actual_overhead(self, hmd_projection, frame_projection):
+        a_hmd = (hmd_projection[2] - hmd_projection[0]) * (hmd_projection[1] - hmd_projection[3])
+        a_overfilling = (frame_projection[2] - frame_projection[0]) * (frame_projection[1] - frame_projection[3])
+
+        return a_overfilling / a_hmd - 1

@@ -35,17 +35,19 @@ class MotionPredictSimulator:
                      float(row["input_orientation_z"]),
                      float(row["input_orientation_w"])],
                     float(row["timestamp"]),
-                    float(row["fov"])
+                    [float(row["input_projection_left"]),
+                     float(row["input_projection_top"]),
+                     float(row["input_projection_right"]),
+                     float(row["input_projection_bottom"])]
                 )
 
-                prediction_time, predicted_orientation, overfilling = \
+                prediction_time, predicted_orientation, predicted_projection = \
                     self.module.predict(motion_data)
                 
                 predicted_data = PredictedData(motion_data.timestamp,
                                                prediction_time,
                                                predicted_orientation,
-                                               motion_data.fov,
-                                               overfilling)
+                                               predicted_projection)
 
                 if self.prediction_output is not None:
                     self.prediction_output.write(motion_data, predicted_data)

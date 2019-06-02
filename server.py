@@ -63,12 +63,12 @@ class App(PredictModule):
         prediction_time = 100.0  # ms
         predicted_orientation = motion_data.orientation
 
-        # overfilling left, top, right, bottom in radian
-        overfilling = [-0.0873, 0.0873, 0.0873, -0.0873]
+        # overfilling delta in radian (left, top, right, bottom)
+        overfilling = [-0.5236, 0.2618, 0.2618, -0.5236]
 
-        return prediction_time, predicted_orientation, overfilling
+        return prediction_time, predicted_orientation, self.make_camera_projection(motion_data, overfilling)
 
-    def feedbackReceived(self, feedback):
+    def feedback_received(self, feedback):
         # see PrefMetricWriter.write_metric() to understand feedback values
         # (motion_prediction_server.py:320)
         
@@ -77,7 +77,7 @@ class App(PredictModule):
         # overall_latency = feedback['endClientRender'] - feedback['gatherInput']
         
         pass
-
+    
     
 def main():
     app = App()

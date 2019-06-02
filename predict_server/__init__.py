@@ -1,3 +1,4 @@
+import math
 import asyncio
 import time
 import zmq
@@ -15,8 +16,16 @@ class PredictModule(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def feedbackReceived(self, feedback):
+    def feedback_received(self, feedback):
         pass
+
+    def make_camera_projection(self, motion_data, overfilling):
+        return [
+            math.tan(math.atan(motion_data.camera_projection[0]) - overfilling[0]),
+            math.tan(math.atan(motion_data.camera_projection[1]) + overfilling[1]),
+            math.tan(math.atan(motion_data.camera_projection[2]) + overfilling[2]),
+            math.tan(math.atan(motion_data.camera_projection[3]) - overfilling[3])
+        ]        
 
 
 class MotionPredictServer:
@@ -72,14 +81,13 @@ class MotionPredictServer:
 
                 self.start_prediction(motion_data.timestamp)
 
-                prediction_time, predicted_orientation, overfilling = \
+                prediction_time, predicted_orientation, predicted_projection = \
                     self.module.predict(motion_data)
                 
                 predicted_data = PredictedData(motion_data.timestamp,
                                                prediction_time,
                                                predicted_orientation,
-                                               motion_data.fov,
-                                               overfilling)
+                                               predicted_projection)
                 
                 self.end_prediction(motion_data.timestamp)
             
@@ -127,7 +135,7 @@ class MotionPredictServer:
             if self.metric_writer is not None:
                 self.metric_writer.write_metric(self.feedbacks[session])
 
-            self.module.feedbackReceived(self.feedbacks[session])
+            self.module.feedback_received(self.feedbacks[session])
                 
             self.feedbacks = {
                 s: self.feedbacks[s] for s in self.feedbacks if s > session
