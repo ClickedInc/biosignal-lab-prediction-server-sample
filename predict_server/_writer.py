@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import quaternion
 
@@ -48,6 +49,9 @@ class PredictionOutputWriter(CsvWriter):
             'input_orientation_y',
             'input_orientation_z',
             'input_orientation_w',
+            'input_orientation_yaw',
+            'input_orientation_pitch',
+            'input_orientation_roll',
             'input_projection_left',
             'input_projection_top',
             'input_projection_right',
@@ -57,6 +61,9 @@ class PredictionOutputWriter(CsvWriter):
             'predicted_orientation_y',
             'predicted_orientation_z',
             'predicted_orientation_w',
+            'predicted_orientation_yaw',
+            'predicted_orientation_pitch',
+            'predicted_orientation_roll',
             'predicted_projection_left',
             'predicted_projection_top',
             'predicted_projection_right',
@@ -64,6 +71,9 @@ class PredictionOutputWriter(CsvWriter):
         ]
 
     def write(self, motion_data, predicted_data):
+        input_orientation_euler = self.quat_to_euler(motion_data.orientation)
+        predicted_orientation_euler = self.quat_to_euler(predicted_data.orientation)
+        
         self.write_line([
             str(motion_data.timestamp),
             str(motion_data.biosignal[0]),
@@ -87,6 +97,9 @@ class PredictionOutputWriter(CsvWriter):
             str(motion_data.orientation[1]),
             str(motion_data.orientation[2]),
             str(motion_data.orientation[3]),
+            str(input_orientation_euler[0]),
+            str(input_orientation_euler[1]),
+            str(input_orientation_euler[2]),
             str(motion_data.camera_projection[0]),
             str(motion_data.camera_projection[1]),
             str(motion_data.camera_projection[2]),
@@ -96,11 +109,31 @@ class PredictionOutputWriter(CsvWriter):
             str(predicted_data.orientation[1]),
             str(predicted_data.orientation[2]),
             str(predicted_data.orientation[3]),
+            str(predicted_orientation_euler[0]),
+            str(predicted_orientation_euler[1]),
+            str(predicted_orientation_euler[2]),
             str(predicted_data.camera_projection[0]),
             str(predicted_data.camera_projection[1]),
             str(predicted_data.camera_projection[2]),
             str(predicted_data.camera_projection[3])
         ])
+
+    def quat_to_euler(self, quat):        
+        siny_cosp = 2 * (quat[3] * quat[1] - quat[2] * quat[0])
+        cosy_cosp = 1 - 2 * (quat[1] * quat[1] + quat[2] * quat[2])
+        yaw = math.atan2(siny_cosp, cosy_cosp)
+
+        sinp = 2 * (quat[3] * quat[2] + quat[0] * quat[1])
+        if abs(sinp) >= 1:
+            roll = math.copysign(math.pi, sinp)
+        else:
+            roll = math.asin(sinp)
+
+        sinx_cosp = 2 * (quat[3] * quat[0] - quat[1] * quat[2])
+        cosx_cosp = 1 - 2 * (quat[2] * quat[2] + quat[0] * quat[0])
+        pitch = math.atan2(sinx_cosp, cosx_cosp)
+
+        return [yaw, pitch, roll]
 
         
 class PerfMetricWriter(CsvWriter):
