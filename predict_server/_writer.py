@@ -125,7 +125,7 @@ class PredictionOutputWriter(CsvWriter):
 
         sinp = 2 * (quat[3] * quat[2] + quat[0] * quat[1])
         if abs(sinp) >= 1:
-            roll = math.copysign(math.pi, sinp)
+            roll = math.copysign(math.pi / 2, sinp)
         else:
             roll = math.asin(sinp)
 
