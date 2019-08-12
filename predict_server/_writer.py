@@ -11,7 +11,7 @@ def quat_to_euler(x, y, z, w):
 
     sinp = 2 * (w * z + x * y)
     if abs(sinp) >= 1:
-        roll = math.copysign(math.pi, sinp)
+        roll = math.copysign(math.pi / 2, sinp)
     else:
         roll = math.asin(sinp)
 
