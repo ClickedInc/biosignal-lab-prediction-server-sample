@@ -4,6 +4,23 @@ import quaternion
 
 from abc import abstractmethod, ABCMeta
 
+def quat_to_euler(x, y, z, w):
+    siny_cosp = 2 * (w * y - z * x)
+    cosy_cosp = 1 - 2 * (y * y + z * z)
+    yaw = math.atan2(siny_cosp, cosy_cosp)
+
+    sinp = 2 * (w * z + x * y)
+    if abs(sinp) >= 1:
+        roll = math.copysign(math.pi, sinp)
+    else:
+        roll = math.asin(sinp)
+
+    sinx_cosp = 2 * (w * x - y * z)
+    cosx_cosp = 1 - 2 * (z * z + x * x)
+    pitch = math.atan2(sinx_cosp, cosx_cosp)
+
+    return [yaw, pitch, roll]    
+
 
 class CsvWriter(metaclass=ABCMeta):
     def __init__(self, output):
@@ -71,8 +88,18 @@ class PredictionOutputWriter(CsvWriter):
         ]
 
     def write(self, motion_data, predicted_data):
-        input_orientation_euler = self.quat_to_euler(motion_data.orientation)
-        predicted_orientation_euler = self.quat_to_euler(predicted_data.orientation)
+        input_orientation_euler = quat_to_euler(
+            motion_data.orientation[0],
+            motion_data.orientation[1],
+            motion_data.orientation[2],
+            motion_data.orientation[3] 
+        )
+        predicted_orientation_euler = quat_to_euler(
+            predicted_data.orientation[0],
+            predicted_data.orientation[1],
+            predicted_data.orientation[2],
+            predicted_data.orientation[3]
+        )
         
         self.write_line([
             str(motion_data.timestamp),
@@ -118,23 +145,6 @@ class PredictionOutputWriter(CsvWriter):
             str(predicted_data.camera_projection[3])
         ])
 
-    def quat_to_euler(self, quat):        
-        siny_cosp = 2 * (quat[3] * quat[1] - quat[2] * quat[0])
-        cosy_cosp = 1 - 2 * (quat[1] * quat[1] + quat[2] * quat[2])
-        yaw = math.atan2(siny_cosp, cosy_cosp)
-
-        sinp = 2 * (quat[3] * quat[2] + quat[0] * quat[1])
-        if abs(sinp) >= 1:
-            roll = math.copysign(math.pi, sinp)
-        else:
-            roll = math.asin(sinp)
-
-        sinx_cosp = 2 * (quat[3] * quat[0] - quat[1] * quat[2])
-        cosx_cosp = 1 - 2 * (quat[2] * quat[2] + quat[0] * quat[0])
-        pitch = math.atan2(sinx_cosp, cosx_cosp)
-
-        return [yaw, pitch, roll]
-
         
 class PerfMetricWriter(CsvWriter):
     def __init__(self, output):
@@ -147,6 +157,9 @@ class PerfMetricWriter(CsvWriter):
             'input_orientation_y',
             'input_orientation_z',
             'input_orientation_w',
+            'input_orientation_yaw',
+            'input_orientation_pitch',
+            'input_orientation_roll',
             'input_projection_left',
             'input_projection_top',
             'input_projection_right',
@@ -155,6 +168,9 @@ class PerfMetricWriter(CsvWriter):
             'predicted_orientation_y',
             'predicted_orientation_z',
             'predicted_orientation_w',
+            'predicted_orientation_yaw',
+            'predicted_orientation_pitch',
+            'predicted_orientation_roll',
             'predicted_projection_left',
             'predicted_projection_top',
             'predicted_projection_right',
@@ -209,8 +225,8 @@ class PerfMetricWriter(CsvWriter):
         # overhead
         hmd_orientation = np.quaternion(
             feedback['hmdOrientationW'],
-            feedback['hmdOrientationX'],
-            feedback['hmdOrientationY'],
+            -feedback['hmdOrientationX'],
+            -feedback['hmdOrientationY'],
             feedback['hmdOrientationZ'],
         )
         hmd_projection = [
@@ -221,8 +237,8 @@ class PerfMetricWriter(CsvWriter):
         ]
         frame_orientation = np.quaternion(
             feedback['frameOrientationW'],
-            feedback['frameOrientationX'],
-            feedback['frameOrientationY'],
+            -feedback['frameOrientationX'],
+            -feedback['frameOrientationY'],
             feedback['frameOrientationZ']
         )
         frame_projection = [
@@ -232,12 +248,28 @@ class PerfMetricWriter(CsvWriter):
             feedback['frameProjectionB']
         ]
 
+        hmd_orientation_euler = quat_to_euler(
+            hmd_orientation.x,
+            hmd_orientation.y,
+            hmd_orientation.z,
+            hmd_orientation.w
+        )
+        frame_orientation_euler = quat_to_euler(
+            frame_orientation.x,
+            frame_orientation.y,
+            frame_orientation.z,
+            frame_orientation.w
+        )
+
         self.write_line([
             str(feedback['session']),
             str(feedback['hmdOrientationX']),
             str(feedback['hmdOrientationY']),
             str(feedback['hmdOrientationZ']),
             str(feedback['hmdOrientationW']),
+            str(hmd_orientation_euler[0]),
+            str(hmd_orientation_euler[1]),
+            str(hmd_orientation_euler[2]),
             str(feedback['hmdProjectionL']),
             str(feedback['hmdProjectionT']),
             str(feedback['hmdProjectionR']),
@@ -246,6 +278,9 @@ class PerfMetricWriter(CsvWriter):
             str(feedback['frameOrientationY']),
             str(feedback['frameOrientationZ']),
             str(feedback['frameOrientationW']),
+            str(frame_orientation_euler[0]),
+            str(frame_orientation_euler[1]),
+            str(frame_orientation_euler[2]),
             str(feedback['frameProjectionL']),
             str(feedback['frameProjectionT']),
             str(feedback['frameProjectionR']),
@@ -301,3 +336,4 @@ class PerfMetricWriter(CsvWriter):
         a_overfilling = (frame_projection[2] - frame_projection[0]) * (frame_projection[1] - frame_projection[3])
 
         return a_overfilling / a_hmd - 1
+
