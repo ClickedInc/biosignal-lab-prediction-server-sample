@@ -263,8 +263,8 @@ class PerfMetricWriter(CsvWriter):
 
         self.write_line([
             str(feedback['session']),
-            str(feedback['hmdOrientationX']),
-            str(feedback['hmdOrientationY']),
+            str(-feedback['hmdOrientationX']),
+            str(-feedback['hmdOrientationY']),
             str(feedback['hmdOrientationZ']),
             str(feedback['hmdOrientationW']),
             str(hmd_orientation_euler[0]),
@@ -274,8 +274,8 @@ class PerfMetricWriter(CsvWriter):
             str(feedback['hmdProjectionT']),
             str(feedback['hmdProjectionR']),
             str(feedback['hmdProjectionB']),
-            str(feedback['frameOrientationX']),
-            str(feedback['frameOrientationY']),
+            str(-feedback['frameOrientationX']),
+            str(-feedback['frameOrientationY']),
             str(feedback['frameOrientationZ']),
             str(feedback['frameOrientationW']),
             str(frame_orientation_euler[0]),

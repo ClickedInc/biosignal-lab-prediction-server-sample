@@ -61,10 +61,10 @@ class App(PredictModule):
     def predict(self, motion_data):
         # no prediction
         prediction_time = 100.0  # ms
-        predicted_orientation = motion_data.orientation
+        #predicted_orientation = motion_data.orientation
 
         # overfilling delta in radian (left, top, right, bottom)
-        overfilling = [-0.5236, 0.2618, 0.2618, -0.5236]
+        overfilling = [0, 0, 0, 0]
 
         return prediction_time, predicted_orientation, self.make_camera_projection(motion_data, overfilling)
 
