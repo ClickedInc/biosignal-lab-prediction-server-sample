@@ -38,16 +38,35 @@ class MotionPredictSimulator:
                     [float(row["input_projection_left"]),
                      float(row["input_projection_top"]),
                      float(row["input_projection_right"]),
-                     float(row["input_projection_bottom"])]
+                     float(row["input_projection_bottom"])],
+                    [float(row["input_left_eye_position_x"]),
+                     float(row["input_left_eye_position_y"]),
+                     float(row["input_left_eye_position_z"])],
+                    [float(row["input_right_eye_position_x"]),
+                     float(row["input_right_eye_position_y"]),
+                     float(row["input_right_eye_position_z"])],
+                    [float(row["input_right_hand_position_x"]),
+                     float(row["input_right_hand_position_y"]),
+                     float(row["input_right_hand_position_z"])],
+                    [float(row["input_right_hand_orientation_x"]),
+                     float(row["input_right_hand_orientation_y"]),
+                     float(row["input_right_hand_orientation_z"]),
+                     float(row["input_right_hand_orientation_w"])]
                 )
 
-                prediction_time, predicted_orientation, predicted_projection = \
+                prediction_time, orientation, projection, \
+                    left_eye_position, right_eye_position, \
+                    right_hand_position, right_hand_orientation = \
                     self.module.predict(motion_data)
                 
                 predicted_data = PredictedData(motion_data.timestamp,
                                                prediction_time,
-                                               predicted_orientation,
-                                               predicted_projection)
+                                               orientation,
+                                               projection,
+                                               left_eye_position,
+                                               right_eye_position,
+                                               right_hand_position,
+                                               right_hand_orientation)
 
                 if self.prediction_output is not None:
                     self.prediction_output.write(motion_data, predicted_data)

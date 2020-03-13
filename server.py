@@ -61,12 +61,19 @@ class App(PredictModule):
     def predict(self, motion_data):
         # no prediction
         prediction_time = 100.0  # ms
-        #predicted_orientation = motion_data.orientation
+        predicted_orientation = motion_data.orientation
+        predicted_left_eye_pos = motion_data.left_eye_position
+        predicted_right_eye_pos = motion_data.right_eye_position
+        predicted_right_hand_pos = motion_data.right_hand_position
+        predicted_right_hand_ori = motion_data.right_hand_orientation
 
         # overfilling delta in radian (left, top, right, bottom)
         overfilling = [0, 0, 0, 0]
 
-        return prediction_time, predicted_orientation, self.make_camera_projection(motion_data, overfilling)
+        return prediction_time, predicted_orientation, \
+               self.make_camera_projection(motion_data, overfilling), \
+               predicted_left_eye_pos, predicted_right_eye_pos, \
+               predicted_right_hand_pos, predicted_right_hand_ori
 
     def feedback_received(self, feedback):
         # see PrefMetricWriter.write_metric() to understand feedback values

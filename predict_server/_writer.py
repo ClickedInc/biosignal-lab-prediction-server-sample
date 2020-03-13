@@ -84,7 +84,39 @@ class PredictionOutputWriter(CsvWriter):
             'predicted_projection_left',
             'predicted_projection_top',
             'predicted_projection_right',
-            'predicted_projection_bottom'
+            'predicted_projection_bottom',
+            'input_left_eye_position_x',
+            'input_left_eye_position_y',
+            'input_left_eye_position_z',
+            'predicted_left_eye_position_x',
+            'predicted_left_eye_position_y',
+            'predicted_left_eye_position_z',
+            'input_right_eye_position_x',
+            'input_right_eye_position_y',
+            'input_right_eye_position_z',
+            'predicted_right_eye_position_x',
+            'predicted_right_eye_position_y',
+            'predicted_right_eye_position_z',
+            'input_right_hand_position_x',
+            'input_right_hand_position_y',
+            'input_right_hand_position_z',
+            'predicted_right_hand_position_x',
+            'predicted_right_hand_position_y',
+            'predicted_right_hand_position_z',
+            'input_right_hand_orientation_yaw',
+            'input_right_hand_orientation_pitch',
+            'input_right_hand_orientation_roll',
+            'predicted_right_hand_orientation_yaw',
+            'predicted_right_hand_orientation_pitch',
+            'predicted_right_hand_orientation_roll',
+            'input_right_hand_orientation_x',
+            'input_right_hand_orientation_y',
+            'input_right_hand_orientation_z',
+            'input_right_hand_orientation_w',
+            'predicted_right_hand_orientation_x',
+            'predicted_right_hand_orientation_y',
+            'predicted_right_hand_orientation_z',
+            'predicted_right_hand_orientation_w'
         ]
 
     def write(self, motion_data, predicted_data):
@@ -99,6 +131,18 @@ class PredictionOutputWriter(CsvWriter):
             predicted_data.orientation[1],
             predicted_data.orientation[2],
             predicted_data.orientation[3]
+        )
+        input_right_hand_orientation_euler = quat_to_euler(
+            motion_data.right_hand_orientation[0],
+            motion_data.right_hand_orientation[1],
+            motion_data.right_hand_orientation[2],
+            motion_data.right_hand_orientation[3]
+        )
+        predicted_right_hand_orientation_euler = quat_to_euler(
+            predicted_data.right_hand_orientation[0],
+            predicted_data.right_hand_orientation[1],
+            predicted_data.right_hand_orientation[2],
+            predicted_data.right_hand_orientation[3]
         )
         
         self.write_line([
@@ -142,7 +186,39 @@ class PredictionOutputWriter(CsvWriter):
             str(predicted_data.camera_projection[0]),
             str(predicted_data.camera_projection[1]),
             str(predicted_data.camera_projection[2]),
-            str(predicted_data.camera_projection[3])
+            str(predicted_data.camera_projection[3]),
+            str(motion_data.left_eye_position[0]),
+            str(motion_data.left_eye_position[1]),
+            str(motion_data.left_eye_position[2]),
+            str(predicted_data.left_eye_position[0]),
+            str(predicted_data.left_eye_position[1]),
+            str(predicted_data.left_eye_position[2]),
+            str(motion_data.right_eye_position[0]),
+            str(motion_data.right_eye_position[1]),
+            str(motion_data.right_eye_position[2]),
+            str(predicted_data.right_eye_position[0]),
+            str(predicted_data.right_eye_position[1]),
+            str(predicted_data.right_eye_position[2]),
+            str(motion_data.right_hand_position[0]),
+            str(motion_data.right_hand_position[1]),
+            str(motion_data.right_hand_position[2]),
+            str(predicted_data.right_hand_position[0]),
+            str(predicted_data.right_hand_position[1]),
+            str(predicted_data.right_hand_position[2]),
+            str(input_right_hand_orientation_euler[0]),
+            str(input_right_hand_orientation_euler[1]),
+            str(input_right_hand_orientation_euler[2]),
+            str(predicted_right_hand_orientation_euler[0]),
+            str(predicted_right_hand_orientation_euler[1]),
+            str(predicted_right_hand_orientation_euler[2]),
+            str(motion_data.right_hand_orientation[0]),
+            str(motion_data.right_hand_orientation[1]),
+            str(motion_data.right_hand_orientation[2]),
+            str(motion_data.right_hand_orientation[3]),
+            str(predicted_data.right_hand_orientation[0]),
+            str(predicted_data.right_hand_orientation[1]),
+            str(predicted_data.right_hand_orientation[2]),
+            str(predicted_data.right_hand_orientation[3])            
         ])
 
         

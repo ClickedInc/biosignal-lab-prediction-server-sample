@@ -81,13 +81,19 @@ class MotionPredictServer:
 
                 self.start_prediction(motion_data.timestamp)
 
-                prediction_time, predicted_orientation, predicted_projection = \
+                prediction_time, orientation, projection, \
+                    left_eye_position, right_eye_position, \
+                    right_hand_position, right_hand_orientation = \
                     self.module.predict(motion_data)
                 
                 predicted_data = PredictedData(motion_data.timestamp,
                                                prediction_time,
-                                               predicted_orientation,
-                                               predicted_projection)
+                                               orientation,
+                                               projection,
+                                               left_eye_position,
+                                               right_eye_position,
+                                               right_hand_position,
+                                               right_hand_orientation)
                 
                 self.end_prediction(motion_data.timestamp)
             

@@ -30,15 +30,23 @@ class MotionData:
         pos += 1
 
         camera_projection, pos = float_list_from_bytes(bytes, 4, pos)
+        left_eye_position, pos = float_list_from_bytes(bytes, 3, pos)
+        right_eye_position, pos = float_list_from_bytes(bytes, 3, pos)
+        right_hand_position, pos = float_list_from_bytes(bytes, 3, pos)
+        right_hand_orientation, pos = float_list_from_bytes(bytes, 4, pos)
 
         return cls(
             sample_number, biosignal, acceleration, angular_velocities,
-            magnetic_field, orientation, timestamp, camera_projection
+            magnetic_field, orientation, timestamp, camera_projection,
+            left_eye_position, right_eye_position,
+            right_hand_position, right_hand_orientation
         )
     
     def __init__(self, sample_number, biosignal, acceleration,
                  angular_velocities, magnetic_field,
-                 orientation, timestamp, camera_projection):
+                 orientation, timestamp, camera_projection,
+                 left_eye_position, right_eye_position,
+                 right_hand_position, right_hand_orientation):
         self.sample_number = sample_number
         self.biosignal = biosignal
         self.acceleration = acceleration
@@ -47,6 +55,10 @@ class MotionData:
         self.orientation = orientation
         self.timestamp = timestamp
         self.camera_projection = camera_projection
+        self.left_eye_position = left_eye_position
+        self.right_eye_position = right_eye_position
+        self.right_hand_position = right_hand_position
+        self.right_hand_orientation = right_hand_orientation
 
     def fov(self):
         return math.atan(self.camera_projection[1]) + math.atan(-self.camera_projection[3])
@@ -64,15 +76,21 @@ class MotionData:
 
     
 class PredictedData:
-    def __init__(self, timestamp, prediction_time, orientation, camera_projection):
+    def __init__(self, timestamp, prediction_time, orientation, camera_projection,
+                 left_eye_position, right_eye_position,
+                 right_hand_position, right_hand_orientation):
         self.timestamp = timestamp
         self.prediction_time = prediction_time
         self.orientation = orientation
         self.camera_projection = camera_projection
+        self.left_eye_position = left_eye_position
+        self.right_eye_position = right_eye_position
+        self.right_hand_position = right_hand_position
+        self.right_hand_orientation = right_hand_orientation
 
     def pack(self):
         return struct.pack(
-            '>q9f',
+            '>q22f',
             self.timestamp,
             self.prediction_time,
             self.orientation[0],
@@ -82,5 +100,18 @@ class PredictedData:
             self.camera_projection[0],
             self.camera_projection[1],
             self.camera_projection[2],
-            self.camera_projection[3]
+            self.camera_projection[3],
+            self.left_eye_position[0],
+            self.left_eye_position[1],
+            self.left_eye_position[2],
+            self.right_eye_position[0],
+            self.right_eye_position[1],
+            self.right_eye_position[2],
+            self.right_hand_position[0],
+            self.right_hand_position[1],
+            self.right_hand_position[2],
+            self.right_hand_orientation[0],
+            self.right_hand_orientation[1],
+            self.right_hand_orientation[2],
+            self.right_hand_orientation[3]
         )
