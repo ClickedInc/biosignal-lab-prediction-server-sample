@@ -12,79 +12,89 @@ class MotionData:
         
         pos = 0
 
-        header, sample_number = struct.unpack_from('BB', bytes, pos)
-        assert((header & 0xFF) == 0xA0)
-        pos += 2
-
-        biosignal, pos = float_list_from_bytes(bytes, 8, pos)
-        acceleration, pos = float_list_from_bytes(bytes, 3, pos)
-        angular_velocities, pos = float_list_from_bytes(bytes, 3, pos)
-        magnetic_field, pos = float_list_from_bytes(bytes, 3, pos)
-        orientation, pos = float_list_from_bytes(bytes, 4, pos)
-
         timestamp = struct.unpack_from('>q', bytes, pos)[0]
         pos += 8
 
-        footer = struct.unpack_from('B', bytes, pos)[0]
-        assert((footer & 0xF8) == 0xC0)
-        pos += 1
-
-        camera_projection, pos = float_list_from_bytes(bytes, 4, pos)
         left_eye_position, pos = float_list_from_bytes(bytes, 3, pos)
         right_eye_position, pos = float_list_from_bytes(bytes, 3, pos)
+        head_orientation, pos = float_list_from_bytes(bytes, 4, pos)
+        head_acceleration, pos = float_list_from_bytes(bytes, 3, pos)
+        head_angular_velocity, pos = float_list_from_bytes(bytes, 3, pos)
+        camera_projection, pos = float_list_from_bytes(bytes, 4, pos)
         right_hand_position, pos = float_list_from_bytes(bytes, 3, pos)
         right_hand_orientation, pos = float_list_from_bytes(bytes, 4, pos)
+        right_hand_acceleration, pos = float_list_from_bytes(bytes, 3, pos)
+        right_hand_angular_velocity, pos = float_list_from_bytes(bytes, 3, pos)
 
         return cls(
-            sample_number, biosignal, acceleration, angular_velocities,
-            magnetic_field, orientation, timestamp, camera_projection,
-            left_eye_position, right_eye_position,
-            right_hand_position, right_hand_orientation
+            timestamp,
+            left_eye_position,
+            right_eye_position,
+            head_orientation,
+            head_acceleration,
+            head_angular_velocity,
+            camera_projection,
+            right_hand_position,
+            right_hand_orientation,
+            right_hand_acceleration,
+            right_hand_angular_velocity
         )
     
-    def __init__(self, sample_number, biosignal, acceleration,
-                 angular_velocities, magnetic_field,
-                 orientation, timestamp, camera_projection,
-                 left_eye_position, right_eye_position,
-                 right_hand_position, right_hand_orientation):
-        self.sample_number = sample_number
-        self.biosignal = biosignal
-        self.acceleration = acceleration
-        self.angular_velocities = angular_velocities
-        self.magnetic_field = magnetic_field
-        self.orientation = orientation
+    def __init__(self,
+                 timestamp,
+                 left_eye_position,
+                 right_eye_position,
+                 head_orientation,
+                 head_acceleration,
+                 head_angular_velocity,
+                 camera_projection,
+                 right_hand_position,
+                 right_hand_orientation,
+                 right_hand_acceleration,
+                 right_hand_angular_velocity):
         self.timestamp = timestamp
-        self.camera_projection = camera_projection
         self.left_eye_position = left_eye_position
         self.right_eye_position = right_eye_position
+        self.head_orientation = head_orientation
+        self.head_acceleration = head_acceleration
+        self.head_angular_velocity = head_angular_velocity
+        self.camera_projection = camera_projection
         self.right_hand_position = right_hand_position
         self.right_hand_orientation = right_hand_orientation
+        self.right_hand_acceleration = right_hand_acceleration
+        self.right_hand_angular_velocity = right_hand_angular_velocity
 
     def fov(self):
         return math.atan(self.camera_projection[1]) + math.atan(-self.camera_projection[3])
 
     def __str__(self):
         return (
-            "sample {0}, biosignal {1}, acceleration {2}, "
-            "angular velocities {3}, magnetic field {4}, orientation {5}, "
-            "timestamp {6}, fov {7}"
+            "timestamp {0}, eye positions ({1}), ({2}), "
+            "head orientation {3}, camera fov {4}, "
+            "right hand position {5}, right hand orientation {6}"
         ).format(
-            self.sample_number, self.biosignal, self.acceleration,
-            self.angular_velocities, self.magnetic_field, self.orientation,
-            self.timestamp, self.fov()
+            self.timestamp, self.left_eye_position, self.right_eye_position,
+            self.head_orientation, self.fov(),
+            self.right_hand_position, self.right_hand_orientation
         )
 
     
 class PredictedData:
-    def __init__(self, timestamp, prediction_time, orientation, camera_projection,
-                 left_eye_position, right_eye_position,
-                 right_hand_position, right_hand_orientation):
+    def __init__(self,
+                 timestamp,
+                 prediction_time,
+                 left_eye_position,
+                 right_eye_position,
+                 head_orientation,
+                 camera_projection,
+                 right_hand_position,
+                 right_hand_orientation):
         self.timestamp = timestamp
         self.prediction_time = prediction_time
-        self.orientation = orientation
-        self.camera_projection = camera_projection
         self.left_eye_position = left_eye_position
         self.right_eye_position = right_eye_position
+        self.head_orientation = head_orientation
+        self.camera_projection = camera_projection
         self.right_hand_position = right_hand_position
         self.right_hand_orientation = right_hand_orientation
 
@@ -93,20 +103,20 @@ class PredictedData:
             '>q22f',
             self.timestamp,
             self.prediction_time,
-            self.orientation[0],
-            self.orientation[1],
-            self.orientation[2],
-            self.orientation[3],
-            self.camera_projection[0],
-            self.camera_projection[1],
-            self.camera_projection[2],
-            self.camera_projection[3],
             self.left_eye_position[0],
             self.left_eye_position[1],
             self.left_eye_position[2],
             self.right_eye_position[0],
             self.right_eye_position[1],
             self.right_eye_position[2],
+            self.head_orientation[0],
+            self.head_orientation[1],
+            self.head_orientation[2],
+            self.head_orientation[3],
+            self.camera_projection[0],
+            self.camera_projection[1],
+            self.camera_projection[2],
+            self.camera_projection[3],            
             self.right_hand_position[0],
             self.right_hand_position[1],
             self.right_hand_position[2],
