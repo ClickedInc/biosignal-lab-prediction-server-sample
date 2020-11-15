@@ -33,7 +33,7 @@ class ExternalInput:
             return
         
         if input_data.id in self.states and \
-            not self.states[input_data.id].StateEquals(input_data):
+            self.states[input_data.id].StateEquals(input_data):
             return
 
         self.states[input_data.id] = input_data

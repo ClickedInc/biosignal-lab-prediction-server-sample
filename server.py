@@ -87,15 +87,14 @@ class App(PredictModule):
         # example : calculate overall latency
         #
         # overall_latency = feedback['endClientRender'] - feedback['gatherInput']
-        
         pass
 
     def external_input_received(self, input_data):
-        print(input_data)
+        #print(input_data, flush=True)
         pass
     
     def game_event_received(self, event):
-        print(event)
+        print(event, flush=True)
         pass
     
 def main():

@@ -26,7 +26,7 @@ class MotionData:
         right_hand_acceleration, pos = float_list_from_bytes(bytes, 3, pos)
         right_hand_angular_velocity, pos = float_list_from_bytes(bytes, 3, pos)
 
-        right_hand_primary_button_press = struct.unpack_from('>B', bytes, pos)
+        right_hand_primary_button_press = struct.unpack_from('>B', bytes, pos)[0]
         pos += 1
 
         return cls(

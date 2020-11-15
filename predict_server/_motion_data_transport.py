@@ -17,7 +17,6 @@ class MotionDataTransport:
         poller.register(self.socket_recv, zmq.POLLIN)
 
         self.accept_client_buttons = accept_client_buttons
-        print("accept_client_buttons: " + str(accept_client_buttons))
 
     async def process_events(self, events, external_input):
         if self.socket_recv not in dict(events):
@@ -52,9 +51,9 @@ class MotionDataTransport:
                                         camera_projection,
                                         right_hand_position,
                                         right_hand_orientation,
-                                        input_data.id,
-                                        input_data.actual_press,
-                                        input_data.predicted_press)
+                                        input_data.id if input_data != None else 0,
+                                        input_data.actual_press if input_data != None else False,
+                                        input_data.predicted_press if input_data != None else False)
 
         self.owner.post_predict_motion(motion_data.timestamp)
 

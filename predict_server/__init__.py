@@ -61,10 +61,12 @@ class MotionPredictServer:
         ) if game_event_output is not None else None
 
     def run(self):
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
         context = Context.instance()
         self.event_loop = asyncio.get_event_loop()
 
-        print("Starting server on port {}...".format(self.port_input))
+        print("Starting server on port {}...".format(self.port_input), flush=True)
 
         try:
             self.event_loop.run_until_complete(self.loop(context))
