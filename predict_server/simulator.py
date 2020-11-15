@@ -49,7 +49,8 @@ class MotionPredictSimulator:
                      float(row["input_right_hand_acceleration_z"])],
                     [float(row["input_right_hand_angular_vec_x"]),
                      float(row["input_right_hand_angular_vec_y"]),
-                     float(row["input_right_hand_angular_vec_z"])]
+                     float(row["input_right_hand_angular_vec_z"])],
+                     0
                 )
 
                 prediction_time, left_eye_position, right_eye_position, \
@@ -64,7 +65,10 @@ class MotionPredictSimulator:
                                                head_orientation,
                                                camera_projection,
                                                right_hand_position,
-                                               right_hand_orientation)
+                                               right_hand_orientation,
+                                               0,
+                                               0,
+                                               0)
 
                 if self.prediction_output is not None:
                     self.prediction_output.write(motion_data, predicted_data)

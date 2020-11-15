@@ -111,7 +111,7 @@ class PredictionOutputWriter(CsvWriter):
             'predicted_right_hand_orientation_w',
             'predicted_right_hand_orientation_yaw',
             'predicted_right_hand_orientation_pitch',
-            'predicted_right_hand_orientation_roll',
+            'predicted_right_hand_orientation_roll'
         ]
 
     def write(self, motion_data, predicted_data):
@@ -403,3 +403,24 @@ class PerfMetricWriter(CsvWriter):
 
         return a_overfilling / a_hmd - 1
 
+
+class GameEventWriter(CsvWriter):
+    def __init__(self, output):
+        super().__init__(output)
+
+    def make_header_items(self):
+        return [
+            'timestamp',
+            'type',
+            'id',
+            'event'
+        ]
+
+    def write(self, event):
+        self.write_line([
+            str(event['timestamp']),
+            str(event['type']),
+            str(event['id']),
+            str(event['event'])
+        ])
+    

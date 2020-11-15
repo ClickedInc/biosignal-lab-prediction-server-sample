@@ -6,10 +6,11 @@ from predict_server.simulator import MotionPredictSimulator
 
 class App(PredictModule):
     def parse_command_args(self):
-        port = feedback = input_file = output = metric_output = None
+        port = feedback = input_file = output = metric_output = game_event_output = None
+        accept_client_buttons = False
         
         try:
-            opts, args = getopt.getopt(sys.argv[1:], "p:f:m:o:i:")
+            opts, _args = getopt.getopt(sys.argv[1:], "p:f:m:o:i:g:", ["accept-client-buttons"])
         except getopt.GetoptError as err:
             print(err)
             sys.exit(1)
@@ -25,27 +26,26 @@ class App(PredictModule):
                 output = arg
             elif opt == "-m":
                 metric_output = arg
+            elif opt == "-g":
+                game_event_output = arg
+            elif opt == "--accept-client-buttons":
+                accept_client_buttons = True
             else:
                 assert False, "unhandled option"
                 
-        return port, feedback, input_file, output, metric_output
+        return port, feedback, input_file, output, metric_output, game_event_output, accept_client_buttons
 
     def run(self):
-        port_input, port_feedback, input_file, output, metric_output = \
+        port_input, port_feedback, input_file, output, metric_output, game_event_output, accept_client_buttons = \
             self.parse_command_args()
         if input_file is None:
             assert(port_input is not None and port_feedback is not None)
             
             server = MotionPredictServer(
-                self, port_input, port_feedback, output, metric_output
+                self, port_input, port_feedback, output, metric_output, game_event_output, accept_client_buttons
             )
 
-            try:
-                server.run()
-            except KeyboardInterrupt:
-                pass
-            finally:                
-                server.shutdown()
+            server.run()
                 
         else:
             assert(output is not None)
@@ -89,7 +89,14 @@ class App(PredictModule):
         # overall_latency = feedback['endClientRender'] - feedback['gatherInput']
         
         pass
+
+    def external_input_received(self, input_data):
+        print(input_data)
+        pass
     
+    def game_event_received(self, event):
+        print(event)
+        pass
     
 def main():
     app = App()

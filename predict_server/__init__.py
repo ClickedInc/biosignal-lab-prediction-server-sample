@@ -1,13 +1,14 @@
 import math
 import asyncio
-import time
 import zmq
-import cbor2
 from abc import abstractmethod, ABCMeta
 from zmq.asyncio import Context, Poller
 
 from ._types import MotionData, PredictedData
-from ._writer import PredictionOutputWriter, PerfMetricWriter
+from ._motion_data_transport import MotionDataTransport
+from ._feedback_analyser import FeedbackAnalyser
+from ._external_input import ExternalInput
+from ._writer import PredictionOutputWriter, PerfMetricWriter, GameEventWriter
 
 
 class PredictModule(metaclass=ABCMeta):
@@ -17,6 +18,14 @@ class PredictModule(metaclass=ABCMeta):
 
     @abstractmethod
     def feedback_received(self, feedback):
+        pass
+
+    @abstractmethod
+    def external_input_received(self, input_data):
+        pass
+
+    @abstractmethod
+    def game_event_received(self, event):
         pass
 
     def make_camera_projection(self, motion_data, overfilling):
@@ -29,12 +38,15 @@ class PredictModule(metaclass=ABCMeta):
 
 
 class MotionPredictServer:
-    def __init__(self, module, port_input, port_feedback,
-                 prediction_output, metric_output):
+    def __init__(self, module, port_input, port_feedback, prediction_output, metric_output, game_event_output, accept_client_buttons):
         self.module = module
         self.port_input = port_input
         self.port_feedback = port_feedback
-        self.feedbacks = {}
+        self.accept_client_buttons = accept_client_buttons
+
+        self.external_input = ExternalInput(self)
+        self.motion_data_transport = MotionDataTransport(self)
+        self.feedback_analyser = FeedbackAnalyser(self)        
 
         self.prediction_output = PredictionOutputWriter(
             prediction_output
@@ -44,11 +56,22 @@ class MotionPredictServer:
             metric_output
         ) if metric_output is not None else None
 
+        self.game_event_writer = GameEventWriter(
+            game_event_output
+        ) if game_event_output is not None else None
+
     def run(self):
         context = Context.instance()
         self.event_loop = asyncio.get_event_loop()
 
-        self.event_loop.run_until_complete(self.loop(context))
+        print("Starting server on port {}...".format(self.port_input))
+
+        try:
+            self.event_loop.run_until_complete(self.loop(context))
+        except KeyboardInterrupt:
+            pass
+        finally:
+            self.shutdown()
 
     def shutdown(self):
         self.event_loop.close()
@@ -59,90 +82,50 @@ class MotionPredictServer:
         if self.metric_writer is not None:
             self.metric_writer.close()
 
+        if self.game_event_writer is not None:
+            self.game_event_writer.close()
+
     async def loop(self, context):
-        motion_raw_input = context.socket(zmq.PULL)
-        motion_raw_input.bind("tcp://*:" + str(self.port_input))
-
-        motion_predicted_output = context.socket(zmq.PUSH)
-        motion_predicted_output.bind("tcp://*:" + str(self.port_input + 1))
-
-        feedback_recv = context.socket(zmq.PULL)
-        feedback_recv.bind("tcp://*:" + str(self.port_feedback))
-
         poller = Poller()
-        poller.register(motion_raw_input, zmq.POLLIN)
-        poller.register(feedback_recv, zmq.POLLIN)
+        self.external_input.configure(context, poller, self.port_input + 2)
+        self.motion_data_transport.configure(context, poller, self.port_input, self.port_input + 1, self.accept_client_buttons)
+        self.feedback_analyser.configure(context, poller, self.port_feedback)
 
         while True:
             events = await poller.poll(100)
-            if motion_raw_input in dict(events):
-                frame = await motion_raw_input.recv(0, False)
-                motion_data = MotionData.from_bytes(frame.bytes)
-
-                self.start_prediction(motion_data.timestamp)
-
-                prediction_time, left_eye_position, right_eye_position, \
-                    head_orientation, camera_projection, \
-                    right_hand_position, right_hand_orientation = \
-                    self.module.predict(motion_data)
-                
-                predicted_data = PredictedData(motion_data.timestamp,
-                                               prediction_time,
-                                               left_eye_position,
-                                               right_eye_position,
-                                               head_orientation,
-                                               camera_projection,
-                                               right_hand_position,
-                                               right_hand_orientation)
-                
-                self.end_prediction(motion_data.timestamp)
             
-                motion_predicted_output.send(predicted_data.pack())
+            await self.external_input.process_events(events)
+            await self.motion_data_transport.process_events(events, self.external_input)
+            await self.feedback_analyser.process_events(events)
 
-                if self.prediction_output is not None:
-                    self.prediction_output.write(motion_data, predicted_data)
-                
-            if feedback_recv in dict(events):
-                feedback = await feedback_recv.recv()
-                self.merge_feedback(cbor2.loads(feedback))
+    # for motion data transport
+    def pre_predict_motion(self, session):
+        self.feedback_analyser.start_prediction(session)
 
-    # process feedbacks
-    def start_prediction(self, session):
-        assert(session not in self.feedbacks)
-        self.feedbacks[session] = {
-            'srcmask': 0,
-            'startPrediction': time.clock()
-        }
+    def predict_motion(self, motion_data):
+        return self.module.predict(motion_data)
 
-    def end_prediction(self, session):
-        self.feedbacks[session]['stopPrediction'] = time.clock()
+    def post_predict_motion(self, session):
+        self.feedback_analyser.end_prediction(session)
 
-    def merge_feedback(self, feedback):
-        if not all(key in feedback for key in ('session', 'source')):
+    def write_prediction_output(self, motion_data, predicted_data):
+        if self.prediction_output is None:
             return
 
-        if not feedback['session'] in self.feedbacks:
-            return
-        
-        session = feedback['session']
-        entry = self.feedbacks[session]
-        
-        if feedback['source'] == 'acli':
-            entry['srcmask'] |= 0b01
-        elif feedback['source'] == 'asrv':
-            entry['srcmask'] |= 0b10
-        else:
-            return
+        self.prediction_output.write(motion_data, predicted_data)
 
-        del feedback['source']
-        self.feedbacks[session] = {**entry, **feedback}
+    def feedback_received(self, feedback):
+        self.module.feedback_received(feedback)
 
-        if entry['srcmask'] == 0b11:
-            if self.metric_writer is not None:
-                self.metric_writer.write_metric(self.feedbacks[session])
+        if self.metric_writer is not None:
+            self.metric_writer.write_metric(feedback)
 
-            self.module.feedback_received(self.feedbacks[session])
-                
-            self.feedbacks = {
-                s: self.feedbacks[s] for s in self.feedbacks if s > session
-            }
+    def external_input_received(self, input_data):
+        self.module.external_input_received(input_data)
+
+    def game_event_received(self, event):
+        self.module.game_event_received(event)
+
+        if self.game_event_writer is not None:
+            self.game_event_writer.write(event)
+
