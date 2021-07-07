@@ -89,53 +89,95 @@ class PredictedData:
     def __init__(self,
                  timestamp,
                  prediction_time,
-                 left_eye_position,
-                 right_eye_position,
-                 head_orientation,
-                 camera_projection,
-                 right_hand_position,
-                 right_hand_orientation,
+                 input_left_eye_position,
+                 input_right_eye_position,
+                 input_head_orientation,
+                 input_camera_projection,
+                 input_right_hand_position,
+                 input_right_hand_orientation,
+                 predicted_left_eye_position,
+                 predicted_right_eye_position,
+                 predicted_head_orientation,
+                 predicted_camera_projection,
+                 predicted_foveation_inner_radius,
+                 predicted_foveation_middle_radius,
+                 predicted_right_hand_position,
+                 predicted_right_hand_orientation,
                  external_input_id,
                  external_input_actual_press,
                  external_input_predicted_press):
         self.timestamp = timestamp
         self.prediction_time = prediction_time
-        self.left_eye_position = left_eye_position
-        self.right_eye_position = right_eye_position
-        self.head_orientation = head_orientation
-        self.camera_projection = camera_projection
-        self.right_hand_position = right_hand_position
-        self.right_hand_orientation = right_hand_orientation
+
+        self.input_left_eye_position = input_left_eye_position
+        self.input_right_eye_position = input_right_eye_position
+        self.input_head_orientation = input_head_orientation
+        self.input_camera_projection = input_camera_projection
+        self.input_right_hand_position = input_right_hand_position
+        self.input_right_hand_orientation = input_right_hand_orientation
+
+        self.predicted_left_eye_position = predicted_left_eye_position
+        self.predicted_right_eye_position = predicted_right_eye_position
+        self.predicted_head_orientation = predicted_head_orientation
+        self.predicted_camera_projection = predicted_camera_projection
+        self.predicted_foveation_inner_radius = predicted_foveation_inner_radius
+        self.predicted_foveation_middle_radius = predicted_foveation_middle_radius
+        self.predicted_right_hand_position = predicted_right_hand_position
+        self.predicted_right_hand_orientation = predicted_right_hand_orientation
+
         self.external_input_id = external_input_id
         self.external_input_actual_press = external_input_actual_press
         self.external_input_predicted_press = external_input_predicted_press
 
     def pack(self):
         return struct.pack(
-            '>q22fH2B',
+            '>q45fH2B',
             self.timestamp,
             self.prediction_time,
-            self.left_eye_position[0],
-            self.left_eye_position[1],
-            self.left_eye_position[2],
-            self.right_eye_position[0],
-            self.right_eye_position[1],
-            self.right_eye_position[2],
-            self.head_orientation[0],
-            self.head_orientation[1],
-            self.head_orientation[2],
-            self.head_orientation[3],
-            self.camera_projection[0],
-            self.camera_projection[1],
-            self.camera_projection[2],
-            self.camera_projection[3],            
-            self.right_hand_position[0],
-            self.right_hand_position[1],
-            self.right_hand_position[2],
-            self.right_hand_orientation[0],
-            self.right_hand_orientation[1],
-            self.right_hand_orientation[2],
-            self.right_hand_orientation[3],
+            self.input_left_eye_position[0],
+            self.input_left_eye_position[1],
+            self.input_left_eye_position[2],
+            self.input_right_eye_position[0],
+            self.input_right_eye_position[1],
+            self.input_right_eye_position[2],
+            self.input_head_orientation[0],
+            self.input_head_orientation[1],
+            self.input_head_orientation[2],
+            self.input_head_orientation[3],
+            self.input_camera_projection[0],
+            self.input_camera_projection[1],
+            self.input_camera_projection[2],
+            self.input_camera_projection[3],
+            self.input_right_hand_position[0],
+            self.input_right_hand_position[1],
+            self.input_right_hand_position[2],
+            self.input_right_hand_orientation[0],
+            self.input_right_hand_orientation[1],
+            self.input_right_hand_orientation[2],
+            self.input_right_hand_orientation[3],
+            self.predicted_left_eye_position[0],
+            self.predicted_left_eye_position[1],
+            self.predicted_left_eye_position[2],
+            self.predicted_right_eye_position[0],
+            self.predicted_right_eye_position[1],
+            self.predicted_right_eye_position[2],
+            self.predicted_head_orientation[0],
+            self.predicted_head_orientation[1],
+            self.predicted_head_orientation[2], 
+            self.predicted_head_orientation[3],
+            self.predicted_camera_projection[0],
+            self.predicted_camera_projection[1],
+            self.predicted_camera_projection[2],
+            self.predicted_camera_projection[3], 
+            self.predicted_foveation_inner_radius,
+            self.predicted_foveation_middle_radius,
+            self.predicted_right_hand_position[0],
+            self.predicted_right_hand_position[1],
+            self.predicted_right_hand_position[2],
+            self.predicted_right_hand_orientation[0],
+            self.predicted_right_hand_orientation[1],
+            self.predicted_right_hand_orientation[2],
+            self.predicted_right_hand_orientation[3],
             self.external_input_id,
             1 if self.external_input_actual_press else 0,
             1 if self.external_input_predicted_press else 0

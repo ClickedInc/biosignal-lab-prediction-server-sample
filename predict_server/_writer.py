@@ -29,6 +29,7 @@ class CsvWriter(metaclass=ABCMeta):
 
     def write_line(self, items):
         self.output.write(','.join(items) + '\n')
+        self.output.flush()
 
     def close(self):
         self.output.close()
@@ -102,6 +103,8 @@ class PredictionOutputWriter(CsvWriter):
             'predicted_camera_projection_top',
             'predicted_camera_projection_right',
             'predicted_camera_projection_bottom',
+            'predicted_foveation_inner_radius',
+            'predicted_foveation_middle_radius',
             'predicted_right_hand_position_x',
             'predicted_right_hand_position_y',
             'predicted_right_hand_position_z',
@@ -122,10 +125,10 @@ class PredictionOutputWriter(CsvWriter):
             motion_data.head_orientation[3] 
         )
         predicted_head_orientation_euler = quat_to_euler(
-            predicted_data.head_orientation[0],
-            predicted_data.head_orientation[1],
-            predicted_data.head_orientation[2],
-            predicted_data.head_orientation[3]
+            predicted_data.predicted_head_orientation[0],
+            predicted_data.predicted_head_orientation[1],
+            predicted_data.predicted_head_orientation[2],
+            predicted_data.predicted_head_orientation[3]
         )
         input_right_hand_orientation_euler = quat_to_euler(
             motion_data.right_hand_orientation[0],
@@ -134,10 +137,10 @@ class PredictionOutputWriter(CsvWriter):
             motion_data.right_hand_orientation[3]
         )
         predicted_right_hand_orientation_euler = quat_to_euler(
-            predicted_data.right_hand_orientation[0],
-            predicted_data.right_hand_orientation[1],
-            predicted_data.right_hand_orientation[2],
-            predicted_data.right_hand_orientation[3]
+            predicted_data.predicted_right_hand_orientation[0],
+            predicted_data.predicted_right_hand_orientation[1],
+            predicted_data.predicted_right_hand_orientation[2],
+            predicted_data.predicted_right_hand_orientation[3]
         )
         
         self.write_line([
@@ -182,30 +185,32 @@ class PredictionOutputWriter(CsvWriter):
             str(motion_data.right_hand_angular_velocity[1]),
             str(motion_data.right_hand_angular_velocity[2]),
             str(predicted_data.prediction_time),
-            str(predicted_data.left_eye_position[0]),
-            str(predicted_data.left_eye_position[1]),
-            str(predicted_data.left_eye_position[2]),
-            str(predicted_data.right_eye_position[0]),
-            str(predicted_data.right_eye_position[1]),
-            str(predicted_data.right_eye_position[2]),
-            str(predicted_data.head_orientation[0]),
-            str(predicted_data.head_orientation[1]),
-            str(predicted_data.head_orientation[2]),
-            str(predicted_data.head_orientation[3]),
+            str(predicted_data.predicted_left_eye_position[0]),
+            str(predicted_data.predicted_left_eye_position[1]),
+            str(predicted_data.predicted_left_eye_position[2]),
+            str(predicted_data.predicted_right_eye_position[0]),
+            str(predicted_data.predicted_right_eye_position[1]),
+            str(predicted_data.predicted_right_eye_position[2]),
+            str(predicted_data.predicted_head_orientation[0]),
+            str(predicted_data.predicted_head_orientation[1]),
+            str(predicted_data.predicted_head_orientation[2]),
+            str(predicted_data.predicted_head_orientation[3]),
             str(predicted_head_orientation_euler[0]),
             str(predicted_head_orientation_euler[1]),
             str(predicted_head_orientation_euler[2]),
-            str(predicted_data.camera_projection[0]),
-            str(predicted_data.camera_projection[1]),
-            str(predicted_data.camera_projection[2]),
-            str(predicted_data.camera_projection[3]),
-            str(predicted_data.right_hand_position[0]),
-            str(predicted_data.right_hand_position[1]),
-            str(predicted_data.right_hand_position[2]),
-            str(predicted_data.right_hand_orientation[0]),
-            str(predicted_data.right_hand_orientation[1]),
-            str(predicted_data.right_hand_orientation[2]),
-            str(predicted_data.right_hand_orientation[3]),
+            str(predicted_data.predicted_camera_projection[0]),
+            str(predicted_data.predicted_camera_projection[1]),
+            str(predicted_data.predicted_camera_projection[2]),
+            str(predicted_data.predicted_camera_projection[3]),
+            str(predicted_data.predicted_foveation_inner_radius),
+            str(predicted_data.predicted_foveation_middle_radius),
+            str(predicted_data.predicted_right_hand_position[0]),
+            str(predicted_data.predicted_right_hand_position[1]),
+            str(predicted_data.predicted_right_hand_position[2]),
+            str(predicted_data.predicted_right_hand_orientation[0]),
+            str(predicted_data.predicted_right_hand_orientation[1]),
+            str(predicted_data.predicted_right_hand_orientation[2]),
+            str(predicted_data.predicted_right_hand_orientation[3]),
             str(predicted_right_hand_orientation_euler[0]),
             str(predicted_right_hand_orientation_euler[1]),
             str(predicted_right_hand_orientation_euler[2])

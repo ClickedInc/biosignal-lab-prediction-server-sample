@@ -2,11 +2,18 @@ import sys
 import getopt
 from predict_server import PredictModule, MotionPredictServer
 from predict_server.simulator import MotionPredictSimulator
+# from predict_server import BufferedNoPrediction
 
 
 class App(PredictModule):
+    def __init__(self):
+        # self.prediction = BufferedNoPrediction(20, 100)
+        pass
+
     def parse_command_args(self):
-        port = feedback = input_file = output = metric_output = game_event_output = None
+        port = 5555
+        feedback = 5554
+        input_file = output = metric_output = game_event_output = None
         accept_client_buttons = False
         
         try:
@@ -59,6 +66,9 @@ class App(PredictModule):
     
     # implements PredictModule
     def predict(self, motion_data):
+        # self.prediction.put_motion_data(motion_data)
+        # return self.prediction.get_predicted_result()
+
         # no prediction
         prediction_time = 100.0  # ms
         predicted_left_eye_pos = motion_data.left_eye_position
@@ -72,11 +82,16 @@ class App(PredictModule):
         predicted_right_hand_pos = motion_data.right_hand_position
         predicted_right_hand_ori = motion_data.right_hand_orientation
 
+        foveation_inner_radius = 1.06
+        foveation_middle_radius = 1.42
+
         return prediction_time, \
                predicted_left_eye_pos, \
                predicted_right_eye_pos, \
                predicted_head_orientation, \
                predicted_camera_projection, \
+               foveation_inner_radius, \
+               foveation_middle_radius, \
                predicted_right_hand_pos, \
                predicted_right_hand_ori
 

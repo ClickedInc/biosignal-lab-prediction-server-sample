@@ -9,6 +9,7 @@ from ._motion_data_transport import MotionDataTransport
 from ._feedback_analyser import FeedbackAnalyser
 from ._external_input import ExternalInput
 from ._writer import PredictionOutputWriter, PerfMetricWriter, GameEventWriter
+from ._prediction import BufferedNoPrediction
 
 
 class PredictModule(metaclass=ABCMeta):
@@ -34,7 +35,7 @@ class PredictModule(metaclass=ABCMeta):
             math.tan(math.atan(motion_data.camera_projection[1]) + overfilling[1]),
             math.tan(math.atan(motion_data.camera_projection[2]) + overfilling[2]),
             math.tan(math.atan(motion_data.camera_projection[3]) - overfilling[3])
-        ]        
+        ]
 
 
 class MotionPredictServer:

@@ -27,9 +27,15 @@ class MotionDataTransport:
 
         self.owner.pre_predict_motion(motion_data.timestamp)
 
-        prediction_time, left_eye_position, right_eye_position, \
-            head_orientation, camera_projection, \
-            right_hand_position, right_hand_orientation = \
+        prediction_time, \
+            predicted_left_eye_position, \
+            predicted_right_eye_position, \
+            predicted_head_orientation, \
+            predicted_camera_projection, \
+            predicted_foveation_inner_radius, \
+            predicted_foveation_middle_radius, \
+            predicted_right_hand_position, \
+            predicted_right_hand_orientation = \
             self.owner.predict_motion(motion_data)
 
         if self.accept_client_buttons:
@@ -45,12 +51,20 @@ class MotionDataTransport:
 
         predicted_data = PredictedData(motion_data.timestamp,
                                         prediction_time,
-                                        left_eye_position,
-                                        right_eye_position,
-                                        head_orientation,
-                                        camera_projection,
-                                        right_hand_position,
-                                        right_hand_orientation,
+                                        motion_data.left_eye_position,
+                                        motion_data.right_eye_position,
+                                        motion_data.head_orientation,
+                                        motion_data.camera_projection,
+                                        motion_data.right_hand_position,
+                                        motion_data.right_hand_orientation,
+                                        predicted_left_eye_position,
+                                        predicted_right_eye_position,
+                                        predicted_head_orientation,
+                                        predicted_camera_projection,
+                                        predicted_foveation_inner_radius,
+                                        predicted_foveation_middle_radius,
+                                        predicted_right_hand_position,
+                                        predicted_right_hand_orientation,
                                         input_data.id if input_data != None else 0,
                                         input_data.actual_press if input_data != None else False,
                                         input_data.predicted_press if input_data != None else False)
