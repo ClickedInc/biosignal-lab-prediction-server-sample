@@ -8,6 +8,8 @@ from predict_server.simulator import MotionPredictSimulator
 class App(PredictModule):
     def __init__(self):
         # self.prediction = BufferedNoPrediction(20, 100)
+        self.sum_overall_latency = 0
+        self.count_overall_latency = 0
         pass
 
     def parse_command_args(self):
@@ -70,7 +72,7 @@ class App(PredictModule):
         # return self.prediction.get_predicted_result()
 
         # no prediction
-        prediction_time = 100.0  # ms
+        prediction_time = 250.0  # ms
         predicted_left_eye_pos = motion_data.left_eye_position
         predicted_right_eye_pos = motion_data.right_eye_position
         predicted_head_orientation = motion_data.head_orientation
@@ -101,7 +103,14 @@ class App(PredictModule):
         
         # example : calculate overall latency
         #
-        # overall_latency = feedback['endClientRender'] - feedback['gatherInput']
+        self.sum_overall_latency += feedback['endClientRender'] - feedback['gatherInput']
+        self.count_overall_latency += 1
+
+        if self.count_overall_latency >= 72:
+            print("avg. overall latency: " + str(self.sum_overall_latency / self.count_overall_latency), flush=True)
+            self.sum_overall_latency = 0
+            self.count_overall_latency = 0
+
         pass
 
     def external_input_received(self, input_data):
