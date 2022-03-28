@@ -29,12 +29,16 @@ class PredictModule(metaclass=ABCMeta):
     def game_event_received(self, event):
         pass
 
-    def make_camera_projection(self, motion_data, overfilling):
+    def make_camera_projection(self, motion_data, leftEyeOverfilling, rightEyeOverfilling):
         return [
-            math.tan(math.atan(motion_data.camera_projection[0]) - overfilling[0]),
-            math.tan(math.atan(motion_data.camera_projection[1]) + overfilling[1]),
-            math.tan(math.atan(motion_data.camera_projection[2]) + overfilling[2]),
-            math.tan(math.atan(motion_data.camera_projection[3]) - overfilling[3])
+            math.tan(math.atan(motion_data.camera_projection[0]) - leftEyeOverfilling[0]),
+            math.tan(math.atan(motion_data.camera_projection[1]) + leftEyeOverfilling[1]),
+            math.tan(math.atan(motion_data.camera_projection[2]) + leftEyeOverfilling[2]),
+            math.tan(math.atan(motion_data.camera_projection[3]) - leftEyeOverfilling[3]),
+            math.tan(math.atan(-motion_data.camera_projection[2]) - rightEyeOverfilling[0]),
+            math.tan(math.atan(motion_data.camera_projection[1]) + rightEyeOverfilling[1]),
+            math.tan(math.atan(-motion_data.camera_projection[0]) + rightEyeOverfilling[2]),
+            math.tan(math.atan(motion_data.camera_projection[3]) - rightEyeOverfilling[3])
         ]
 
 

@@ -78,8 +78,9 @@ class App(PredictModule):
         predicted_head_orientation = motion_data.head_orientation
 
         # overfilling delta in radian (left, top, right, bottom)
-        overfilling = [0, 0, 0, 0]
-        predicted_camera_projection = self.make_camera_projection(motion_data, overfilling)
+        leftEyeOverfilling = [0, 0, 0, 0]
+        rightEyeOverfilling = [0, 0, 0, 0]
+        predicted_camera_projection = self.make_camera_projection(motion_data, leftEyeOverfilling, rightEyeOverfilling)
 
         predicted_right_hand_pos = motion_data.right_hand_position
         predicted_right_hand_ori = motion_data.right_hand_orientation

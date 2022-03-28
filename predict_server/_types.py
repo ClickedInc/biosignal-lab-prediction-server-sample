@@ -131,7 +131,7 @@ class PredictedData:
 
     def pack(self):
         return struct.pack(
-            '>q45fH2B',
+            '>q49fH2B',
             self.timestamp,
             self.prediction_time,
             self.input_left_eye_position[0],
@@ -169,6 +169,10 @@ class PredictedData:
             self.predicted_camera_projection[1],
             self.predicted_camera_projection[2],
             self.predicted_camera_projection[3], 
+            self.predicted_camera_projection[4],
+            self.predicted_camera_projection[5],
+            self.predicted_camera_projection[6],
+            self.predicted_camera_projection[7],
             self.predicted_foveation_inner_radius,
             self.predicted_foveation_middle_radius,
             self.predicted_right_hand_position[0],
