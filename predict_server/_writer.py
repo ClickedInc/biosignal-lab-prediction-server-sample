@@ -321,10 +321,14 @@ class PerfMetricWriter(CsvWriter):
             feedback['frameOrientationZ']
         )
         frame_projection = [
-            feedback['frameProjectionL'],
-            feedback['frameProjectionT'],
-            feedback['frameProjectionR'],
-            feedback['frameProjectionB']
+            feedback['frameProjectionLL'],
+            feedback['frameProjectionLT'],
+            feedback['frameProjectionLR'],
+            feedback['frameProjectionLB'],
+            feedback['frameProjectionRL'],
+            feedback['frameProjectionRT'],
+            feedback['frameProjectionRR'],
+            feedback['frameProjectionRB']
         ]
 
         hmd_orientation_euler = quat_to_euler(
@@ -360,10 +364,14 @@ class PerfMetricWriter(CsvWriter):
             str(frame_orientation_euler[0]),
             str(frame_orientation_euler[1]),
             str(frame_orientation_euler[2]),
-            str(feedback['frameProjectionL']),
-            str(feedback['frameProjectionT']),
-            str(feedback['frameProjectionR']),
-            str(feedback['frameProjectionB']),
+            str(feedback['frameProjectionLL']),
+            str(feedback['frameProjectionLT']),
+            str(feedback['frameProjectionLR']),
+            str(feedback['frameProjectionLB']),
+            str(feedback['frameProjectionRL']),
+            str(feedback['frameProjectionRT']),
+            str(feedback['frameProjectionRR']),
+            str(feedback['frameProjectionRB']),
             str(overall_latency),
             str(gather_input_start_prediction),
             str(start_prediction_send_predicted),
