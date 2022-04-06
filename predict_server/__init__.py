@@ -4,7 +4,6 @@ import zmq
 from abc import abstractmethod, ABCMeta
 from zmq.asyncio import Context, Poller
 
-from ._types import MotionData, PredictedData
 from ._motion_data_transport import MotionDataTransport
 from ._feedback_analyser import FeedbackAnalyser
 from ._external_input import ExternalInput
@@ -28,14 +27,6 @@ class PredictModule(metaclass=ABCMeta):
     @abstractmethod
     def game_event_received(self, event):
         pass
-
-    def make_camera_projection(self, motion_data, overfilling):
-        return [
-            math.tan(math.atan(motion_data.camera_projection[0]) - overfilling[0]),
-            math.tan(math.atan(motion_data.camera_projection[1]) + overfilling[1]),
-            math.tan(math.atan(motion_data.camera_projection[2]) + overfilling[2]),
-            math.tan(math.atan(motion_data.camera_projection[3]) - overfilling[3])
-        ]
 
 
 class MotionPredictServer:

@@ -1,7 +1,11 @@
+from math import radians
 import sys
 import getopt
+
+from numpy import deg2rad
 from predict_server import PredictModule, MotionPredictServer
 from predict_server.simulator import MotionPredictSimulator
+import predict_server.utils
 # from predict_server import BufferedNoPrediction
 
 
@@ -72,14 +76,19 @@ class App(PredictModule):
         # return self.prediction.get_predicted_result()
 
         # no prediction
-        prediction_time = 250.0  # ms
+        prediction_time = 150.0  # ms
         predicted_left_eye_pos = motion_data.left_eye_position
         predicted_right_eye_pos = motion_data.right_eye_position
         predicted_head_orientation = motion_data.head_orientation
 
         # overfilling delta in radian (left, top, right, bottom)
-        overfilling = [0, 0, 0, 0]
-        predicted_camera_projection = self.make_camera_projection(motion_data, overfilling)
+        overfilling = [radians(10), radians(10), radians(10), radians(10)]
+
+        left_eye_projection = motion_data.camera_projection
+        predicted_left_camera_projection = predict_server.utils.make_camera_projection(left_eye_projection, overfilling)
+
+        right_eye_projection = predict_server.utils.make_other_eye_projection(left_eye_projection)
+        predicted_right_camera_projection = predict_server.utils.make_camera_projection(right_eye_projection, overfilling)
 
         predicted_right_hand_pos = motion_data.right_hand_position
         predicted_right_hand_ori = motion_data.right_hand_orientation
@@ -91,7 +100,8 @@ class App(PredictModule):
                predicted_left_eye_pos, \
                predicted_right_eye_pos, \
                predicted_head_orientation, \
-               predicted_camera_projection, \
+               predicted_left_camera_projection, \
+               predicted_right_camera_projection, \
                foveation_inner_radius, \
                foveation_middle_radius, \
                predicted_right_hand_pos, \

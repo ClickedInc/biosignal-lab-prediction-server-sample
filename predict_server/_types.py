@@ -98,7 +98,8 @@ class PredictedData:
                  predicted_left_eye_position,
                  predicted_right_eye_position,
                  predicted_head_orientation,
-                 predicted_camera_projection,
+                 predicted_left_camera_projection,
+                 predicted_right_camera_projection,
                  predicted_foveation_inner_radius,
                  predicted_foveation_middle_radius,
                  predicted_right_hand_position,
@@ -119,7 +120,8 @@ class PredictedData:
         self.predicted_left_eye_position = predicted_left_eye_position
         self.predicted_right_eye_position = predicted_right_eye_position
         self.predicted_head_orientation = predicted_head_orientation
-        self.predicted_camera_projection = predicted_camera_projection
+        self.predicted_left_camera_projection = predicted_left_camera_projection
+        self.predicted_right_camera_projection = predicted_right_camera_projection
         self.predicted_foveation_inner_radius = predicted_foveation_inner_radius
         self.predicted_foveation_middle_radius = predicted_foveation_middle_radius
         self.predicted_right_hand_position = predicted_right_hand_position
@@ -131,7 +133,7 @@ class PredictedData:
 
     def pack(self):
         return struct.pack(
-            '>q45fH2B',
+            '>q49fH2B',
             self.timestamp,
             self.prediction_time,
             self.input_left_eye_position[0],
@@ -165,10 +167,14 @@ class PredictedData:
             self.predicted_head_orientation[1],
             self.predicted_head_orientation[2], 
             self.predicted_head_orientation[3],
-            self.predicted_camera_projection[0],
-            self.predicted_camera_projection[1],
-            self.predicted_camera_projection[2],
-            self.predicted_camera_projection[3], 
+            self.predicted_left_camera_projection[0],
+            self.predicted_left_camera_projection[1],
+            self.predicted_left_camera_projection[2],
+            self.predicted_left_camera_projection[3], 
+            self.predicted_right_camera_projection[0],
+            self.predicted_right_camera_projection[1],
+            self.predicted_right_camera_projection[2],
+            self.predicted_right_camera_projection[3],
             self.predicted_foveation_inner_radius,
             self.predicted_foveation_middle_radius,
             self.predicted_right_hand_position[0],
