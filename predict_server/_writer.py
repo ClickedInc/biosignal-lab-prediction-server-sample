@@ -1,6 +1,5 @@
 import math
-import numpy as np
-import quaternion
+from . import utils
 
 from abc import abstractmethod, ABCMeta
 
@@ -202,14 +201,14 @@ class PredictionOutputWriter(CsvWriter):
             str(predicted_head_orientation_euler[0]),
             str(predicted_head_orientation_euler[1]),
             str(predicted_head_orientation_euler[2]),
-            str(predicted_data.predicted_camera_projection[0]),
-            str(predicted_data.predicted_camera_projection[1]),
-            str(predicted_data.predicted_camera_projection[2]),
-            str(predicted_data.predicted_camera_projection[3]),
-            str(predicted_data.predicted_camera_projection[4]),
-            str(predicted_data.predicted_camera_projection[5]),
-            str(predicted_data.predicted_camera_projection[6]),
-            str(predicted_data.predicted_camera_projection[7]),
+            str(predicted_data.predicted_left_camera_projection[0]),
+            str(predicted_data.predicted_left_camera_projection[1]),
+            str(predicted_data.predicted_left_camera_projection[2]),
+            str(predicted_data.predicted_left_camera_projection[3]),
+            str(predicted_data.predicted_right_camera_projection[0]),
+            str(predicted_data.predicted_right_camera_projection[1]),
+            str(predicted_data.predicted_right_camera_projection[2]),
+            str(predicted_data.predicted_right_camera_projection[3]),
             str(predicted_data.predicted_foveation_inner_radius),
             str(predicted_data.predicted_foveation_middle_radius),
             str(predicted_data.predicted_right_hand_position[0]),
@@ -302,34 +301,49 @@ class PerfMetricWriter(CsvWriter):
         gather_input_start_prediction = send_video_start_recv_video = rtt / 2
 
         # overhead
-        hmd_orientation = np.quaternion(
+        hmd_orientation = [
             feedback['hmdOrientationW'],
             -feedback['hmdOrientationX'],
             -feedback['hmdOrientationY'],
             feedback['hmdOrientationZ'],
-        )
-        hmd_projection = [
+        ]
+        left_eye_projection = [
             feedback['hmdProjectionL'],
             feedback['hmdProjectionT'],
             feedback['hmdProjectionR'],
             feedback['hmdProjectionB']
         ]
-        frame_orientation = np.quaternion(
+        frame_orientation = [
             feedback['frameOrientationW'],
             -feedback['frameOrientationX'],
             -feedback['frameOrientationY'],
             feedback['frameOrientationZ']
-        )
-        frame_projection = [
+        ]
+        left_frame_projection = [
             feedback['frameProjectionLL'],
             feedback['frameProjectionLT'],
             feedback['frameProjectionLR'],
-            feedback['frameProjectionLB'],
+            feedback['frameProjectionLB']
+        ]
+        right_frame_projection = [
             feedback['frameProjectionRL'],
             feedback['frameProjectionRT'],
             feedback['frameProjectionRR'],
             feedback['frameProjectionRB']
         ]
+
+        left_optimal_overhead = utils.calc_overhead(
+            left_eye_projection,
+            utils.calc_optimal_projection(hmd_orientation, frame_orientation, left_eye_projection)
+        )
+        left_actual_overhead = utils.calc_overhead(left_eye_projection, left_frame_projection)
+        
+        right_eye_projection = utils.make_other_eye_projection(left_eye_projection)
+        right_optimal_overhead = utils.calc_overhead(
+            right_eye_projection,
+            utils.calc_optimal_projection(hmd_orientation, frame_orientation, right_eye_projection)
+        )
+        right_actual_overhead = utils.calc_overhead(right_eye_projection, right_frame_projection)
 
         hmd_orientation_euler = quat_to_euler(
             hmd_orientation.x,
@@ -384,45 +398,9 @@ class PerfMetricWriter(CsvWriter):
             str(start_client_render_end_client_render),
             str("{:.0f}".format(feedback['frameType'])),
             str("{:.0f}".format(feedback['frameSize'])),
-            str(self.calc_optimal_overhead(hmd_orientation, frame_orientation, hmd_projection)),
-            str(self.calc_actual_overhead(hmd_projection, frame_projection))
+            str((left_optimal_overhead + right_optimal_overhead) / 2),
+            str((left_actual_overhead + right_actual_overhead) / 2)
         ])
-
-    def calc_optimal_overhead(self, hmd_orientation, frame_orientation, hmd_projection):
-        q_d = np.matmul(
-            np.linalg.inv(quaternion.as_rotation_matrix(hmd_orientation)),
-            quaternion.as_rotation_matrix(frame_orientation)
-        )
-
-        lt = np.matmul(q_d, [hmd_projection[0], hmd_projection[1], 1])
-        p_lt = np.dot(lt, 1 / lt[2])
-        
-        rt = np.matmul(q_d, [hmd_projection[2], hmd_projection[1], 1])
-        p_rt = np.dot(rt, 1 / rt[2])
-
-        rb = np.matmul(q_d, [hmd_projection[2], hmd_projection[3], 1])
-        p_rb = np.dot(rb, 1 / rb[2])
-
-        lb = np.matmul(q_d, [hmd_projection[0], hmd_projection[3], 1])
-        p_lb = np.dot(lb, 1 / lb[2])
-
-        p_l = min(p_lt[0], p_rt[0], p_rb[0], p_lb[0])
-        p_t = max(p_lt[1], p_rt[1], p_rb[1], p_lb[1])
-        p_r = max(p_lt[0], p_rt[0], p_rb[0], p_lb[0])
-        p_b = min(p_lt[1], p_rt[1], p_rb[1], p_lb[1])
-
-        size = max(p_r - p_l, p_t - p_b)
-        a_overfilling = size * size
-
-        a_hmd = (hmd_projection[2] - hmd_projection[0]) * (hmd_projection[1] - hmd_projection[3])
-
-        return a_overfilling / a_hmd - 1
-
-    def calc_actual_overhead(self, hmd_projection, frame_projection):
-        a_hmd = (hmd_projection[2] - hmd_projection[0]) * (hmd_projection[1] - hmd_projection[3])
-        a_overfilling = (frame_projection[2] - frame_projection[0]) * (frame_projection[1] - frame_projection[3])
-
-        return a_overfilling / a_hmd - 1
 
 
 class GameEventWriter(CsvWriter):

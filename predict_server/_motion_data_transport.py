@@ -31,7 +31,8 @@ class MotionDataTransport:
             predicted_left_eye_position, \
             predicted_right_eye_position, \
             predicted_head_orientation, \
-            predicted_camera_projection, \
+            predicted_left_camera_projection, \
+            predicted_right_camera_projection, \
             predicted_foveation_inner_radius, \
             predicted_foveation_middle_radius, \
             predicted_right_hand_position, \
@@ -50,24 +51,25 @@ class MotionDataTransport:
         input_data = external_input.get_input(0)
 
         predicted_data = PredictedData(motion_data.timestamp,
-                                        prediction_time,
-                                        motion_data.left_eye_position,
-                                        motion_data.right_eye_position,
-                                        motion_data.head_orientation,
-                                        motion_data.camera_projection,
-                                        motion_data.right_hand_position,
-                                        motion_data.right_hand_orientation,
-                                        predicted_left_eye_position,
-                                        predicted_right_eye_position,
-                                        predicted_head_orientation,
-                                        predicted_camera_projection,
-                                        predicted_foveation_inner_radius,
-                                        predicted_foveation_middle_radius,
-                                        predicted_right_hand_position,
-                                        predicted_right_hand_orientation,
-                                        input_data.id if input_data != None else 0,
-                                        input_data.actual_press if input_data != None else False,
-                                        input_data.predicted_press if input_data != None else False)
+                                       prediction_time,
+                                       motion_data.left_eye_position,
+                                       motion_data.right_eye_position,
+                                       motion_data.head_orientation,
+                                       motion_data.camera_projection,
+                                       motion_data.right_hand_position,
+                                       motion_data.right_hand_orientation,
+                                       predicted_left_eye_position,
+                                       predicted_right_eye_position,
+                                       predicted_head_orientation,
+                                       predicted_left_camera_projection,
+                                       predicted_right_camera_projection,
+                                       predicted_foveation_inner_radius,
+                                       predicted_foveation_middle_radius,
+                                       predicted_right_hand_position,
+                                       predicted_right_hand_orientation,
+                                       input_data.id if input_data != None else 0,
+                                       input_data.actual_press if input_data != None else False,
+                                       input_data.predicted_press if input_data != None else False)
 
         self.owner.post_predict_motion(motion_data.timestamp)
 
