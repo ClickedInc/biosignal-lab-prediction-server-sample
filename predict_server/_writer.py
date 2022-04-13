@@ -350,16 +350,16 @@ class PerfMetricWriter(CsvWriter):
         right_actual_overhead = utils.calc_overhead(right_eye_projection, right_frame_projection)
 
         hmd_orientation_euler = quat_to_euler(
-            hmd_orientation.x,
-            hmd_orientation.y,
-            hmd_orientation.z,
-            hmd_orientation.w
+            hmd_orientation[1],
+            hmd_orientation[2],
+            hmd_orientation[3],
+            hmd_orientation[0]
         )
         frame_orientation_euler = quat_to_euler(
-            frame_orientation.x,
-            frame_orientation.y,
-            frame_orientation.z,
-            frame_orientation.w
+            frame_orientation[1],
+            frame_orientation[2],
+            frame_orientation[3],
+            frame_orientation[0]
         )
 
         self.write_line([
